@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'customer',
     'expense',
     'category',
+    'total',
 ]
 
 MIDDLEWARE = [
@@ -153,22 +154,42 @@ env.read_env(env_file)
 
 
 
-import dj_database_url
+# import dj_database_url
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=env("DATABASE_URL"),
-        conn_max_age=env("CONN_MAX_AGE", cast=int),
-        ssl_require=env("SSL_REQUIRE", cast=bool),
-        conn_health_checks=env("CONN_HEALTH_CHECKS", cast=bool),
-    )
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=env("DATABASE_URL"),
+#         conn_max_age=env("CONN_MAX_AGE", cast=int),
+#         ssl_require=env("SSL_REQUIRE", cast=bool),
+#         conn_health_checks=env("CONN_HEALTH_CHECKS", cast=bool),
+#     )
+# }
+
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dlwwwlysp',
+    'API_KEY': '621165238251166',
+    'API_SECRET': 'H5F9cBgQTD7yCUkanRoxyFRZb9g'
 }
+
+# Initialize cloudinary
+cloudinary.config(
+    cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
+    api_key=CLOUDINARY_STORAGE['API_KEY'],
+    api_secret=CLOUDINARY_STORAGE['API_SECRET']
+)
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+MEDIA_URL = '/mediafiles/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

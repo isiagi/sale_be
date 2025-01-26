@@ -6,6 +6,8 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from .models import CustomUser
 from .serializers import CustomUserSerializer, LoginSerializer
+# allow login
+from rest_framework.permissions import AllowAny
 
 class AuthViewSet(viewsets.GenericViewSet):
     queryset = CustomUser.objects.all()
@@ -14,8 +16,13 @@ class AuthViewSet(viewsets.GenericViewSet):
         if self.action == 'login':
             return LoginSerializer
         return CustomUserSerializer
+    
+    def get_permissions(self):
+        if self.action == 'login':
+            return [AllowAny()]
+        return super().get_permissions()
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def login(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
