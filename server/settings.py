@@ -170,9 +170,9 @@ import cloudinary.uploader
 import cloudinary.api
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dlwwwlysp',
-    'API_KEY': '621165238251166',
-    'API_SECRET': 'H5F9cBgQTD7yCUkanRoxyFRZb9g'
+    'CLOUD_NAME': 'dj6eaoqwq',
+    'API_KEY': '468921312455241',
+    'API_SECRET': '7jqXep66-KNEou3PudZ7pMtde9o'
 }
 
 # Initialize cloudinary
