@@ -5,9 +5,16 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from .models import CustomUser
-from .serializers import CustomUserSerializer, LoginSerializer
+from .serializers import CustomUserSerializer, LoginSerializer, EmailSerializer, ResetPasswordSerializer
 # allow login
 from rest_framework.permissions import AllowAny
+from django.urls import reverse
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.views.decorators.csrf import csrf_exempt
+
+from .send_email import send
 
 class AuthViewSet(viewsets.GenericViewSet):
     queryset = CustomUser.objects.all()
@@ -94,3 +101,67 @@ class AuthViewSet(viewsets.GenericViewSet):
     def logout(self, request):
         request.user.auth_token.delete()
         return Response({'message': 'Logged out successfully'})
+    
+
+    @action(detail=False, methods=['post'])
+    def forgot_password(self, request):
+        serializer = EmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        email = serializer.validated_data['email']
+        user = CustomUser.objects.filter(email=email).first()
+        
+        if user:
+            uidb64 = urlsafe_base64_encode(force_bytes(user.id))
+            token = PasswordResetTokenGenerator().make_token(user)
+            
+            # Generate password reset link using the action URL pattern
+            reset_link = f"http://localhost:3000/reset/?uidb64={uidb64}&token={token}"
+            
+            # Send email
+            send("Password Reset", reset_link, [email])
+            
+            return Response({'message': 'Password reset email sent'}, status=status.HTTP_200_OK)
+        return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def reset_password(self, request):
+        # Get uidb64 and token from query parameters
+        uidb64 = request.query_params.get('uidb64')
+        token = request.query_params.get('token')
+        
+        if not uidb64 or not token:
+            return Response(
+                {'error': 'Invalid password reset link'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Decode the user ID and get the user
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(pk=uid)
+            
+            # Verify the token
+            if not PasswordResetTokenGenerator().check_token(user, token):
+                return Response(
+                    {'error': 'Invalid or expired token'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate and set the new password
+            serializer = ResetPasswordSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            user.set_password(serializer.validated_data['password'])
+            user.save()
+            
+            return Response(
+                {'message': 'Password reset successfully'}, 
+                status=status.HTTP_200_OK
+            )
+            
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            return Response(
+                {'error': 'Invalid reset link'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
