@@ -116,7 +116,7 @@ class AuthViewSet(viewsets.GenericViewSet):
             token = PasswordResetTokenGenerator().make_token(user)
             
             # Generate password reset link using the action URL pattern
-            reset_link = f"http://localhost:3000/reset/?uidb64={uidb64}&token={token}"
+            reset_link = f"https://stockmanagementappweb.netlify.app/reset/?uidb64={uidb64}&token={token}"
             
             # Send email
             send("Password Reset", reset_link, [email])
