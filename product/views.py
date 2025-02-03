@@ -21,9 +21,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         product_data = request.data
 
         # Validate category_id
-        category_id = product_data.get('category')
-        if not category_id:
-            raise ValidationError({'category_id': 'This field is required.'})
+        # category_id = product_data.get('category')
+        # if not category_id:
+        #     raise ValidationError({'category_id': 'This field is required.'})
 
         # Validate product image
         product_image = product_data.get('image')

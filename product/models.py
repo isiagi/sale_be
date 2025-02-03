@@ -9,7 +9,7 @@ class Product(models.Model):
     unit_purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
     unit_taxes = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
-    category = models.ForeignKey('category.Category', on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey('category.Category', on_delete=models.SET_NULL, null=True, blank=True)
     supplier = models.ForeignKey('supplier.Supplier', on_delete=models.SET_NULL, null=True)
     reorder_point = models.PositiveIntegerField(null=True, blank=True, default=10)
     image = CloudinaryField('image', null=True, blank=True, resource_type='image', transformation={
