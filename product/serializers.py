@@ -13,8 +13,9 @@ class ProductSerializer(serializers.ModelSerializer):
     profit = serializers.ReadOnlyField()
     category_name = serializers.CharField(source='category.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
+    total_unit_cost_with_taxes = serializers.ReadOnlyField()
 
     class Meta:
         model = Product
         fields = '__all__'
-        read_only_fields = ('total_investment', 'expected_return', 'profit', 'pieces_sold', 'pieces_pending', 'category_name', 'supplier_name', 'total_revenue', 'total_cost', 'total_taxes')
+        read_only_fields = ('total_investment', 'expected_return', 'profit', 'pieces_sold', 'pieces_pending', 'category_name', 'total_unit_cost_with_taxes', 'supplier_name', 'total_revenue', 'total_cost', 'total_taxes')

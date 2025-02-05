@@ -52,6 +52,10 @@ class Product(models.Model):
         return self.unit_purchase_price * self.total_stock
     
     @property
+    def total_unit_cost_with_taxes(self):
+        return (self.unit_purchase_price + self.unit_taxes)
+    
+    @property
     def total_taxes(self):
         return self.unit_taxes * self.total_stock
     
