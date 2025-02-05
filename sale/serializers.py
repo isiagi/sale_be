@@ -7,3 +7,10 @@ class SaleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sale
         fields = '__all__'
+
+
+class SalesReportSerializer(serializers.Serializer):
+    date = serializers.CharField()
+    product__name = serializers.CharField()
+    total_quantity = serializers.IntegerField()
+    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
