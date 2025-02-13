@@ -6,7 +6,6 @@ from rest_framework.decorators import action
 from django.utils import timezone
 from django.db.models import Sum, F
 
-# Create your views here.
 class SaleViewSet(viewsets.ModelViewSet):
     queryset = Sale.objects.all()
     serializer_class = SaleSerializer
@@ -23,6 +22,10 @@ class SaleViewSet(viewsets.ModelViewSet):
         return queryset.filter(created_by=self.request.user)
     
     def perform_create(self, serializer):
+        # If price is not provided, use product's selling price
+        if 'price' not in serializer.validated_data:
+            product = serializer.validated_data['product']
+            serializer.validated_data['price'] = product.selling_price
         serializer.save(created_by=self.request.user)
 
     @action(detail=False, methods=['get'])
@@ -51,36 +54,6 @@ class SaleViewSet(viewsets.ModelViewSet):
                 'total_amount': total_amount
             }
         })
-
-    @action(detail=False, methods=['get'])
-    def monthly_report(self, request):
-        now = timezone.now()
-        year = request.query_params.get('year', now.year)
-        month = request.query_params.get('month', now.month)
-        
-        try:
-            year = int(year)
-            month = int(month)
-            if not (1 <= month <= 12):
-                raise ValueError("Month must be between 1 and 12")
-        except (TypeError, ValueError) as e:
-            return Response({"error": str(e)}, status=400)
-
-        monthly_sales = Sale.get_monthly_sales(request.user, year, month)
-        serializer = SalesReportSerializer(monthly_sales, many=True)
-        
-        total_quantity = sum(item['total_quantity'] for item in monthly_sales)
-        total_amount = sum(item['total_amount'] for item in monthly_sales)
-        
-        return Response({
-            'period': f"{year}-{month:02d}",
-            'sales': serializer.data,
-            'summary': {
-                'total_quantity': total_quantity,
-                'total_amount': total_amount
-            }
-        })
-    
 
     @action(detail=False, methods=['get'])
     def monthly_report(self, request):
@@ -130,7 +103,7 @@ class SaleViewSet(viewsets.ModelViewSet):
             created_at__month=now.month
         ).aggregate(
             total_quantity=Sum('quantity_sold'),
-            total_amount=Sum(F('quantity_sold') * F('product__selling_price'))
+            total_amount=Sum(F('quantity_sold') * F('price'))  # Use actual sale price
         )
         
         # Get previous month's sales
@@ -143,7 +116,7 @@ class SaleViewSet(viewsets.ModelViewSet):
             created_at__month=prev_month
         ).aggregate(
             total_quantity=Sum('quantity_sold'),
-            total_amount=Sum(F('quantity_sold') * F('product__selling_price'))
+            total_amount=Sum(F('quantity_sold') * F('price'))  # Use actual sale price
         )
         
         return Response({
